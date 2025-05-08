@@ -50,22 +50,24 @@ class CustomPagination(PageNumberPagination):
 
 
 class MovieViewSet(viewsets.ModelViewSet):
+    queryset = Movie.objects.all()
     serializer_class = MovieSerializer
     pagination_class = None
 
     def get_queryset(self):
-        queryset = Movie.objects.all()
+        queryset = super().get_queryset()
         genres = self.request.query_params.get("genres")
-        actors = self.request.query_params.getlist("actors")
+        actors = self.request.query_params.get("actors")
         title = self.request.query_params.get("title")
 
         if genres:
-            genres_ids = [int(g) for g in genres.split(",")]
-            queryset = Movie.objects.filter(genres__id__in=genres_ids)
+            genres = [int(genre) for genre in genres.split(",")]
+            queryset = queryset.filter(genres__id__in=genres)
         if actors:
-            queryset = Movie.objects.filter(actors__id__in=actors)
+            actors = [int(actor) for actor in actors.split(",")]
+            queryset = queryset.filter(actors__id__in=actors)
         if title:
-            queryset = Movie.objects.filter(title__icontains=title)
+            queryset = queryset.filter(title__icontains=title)
 
         if self.action == "list":
             queryset = queryset.prefetch_related("actors", "genres")
